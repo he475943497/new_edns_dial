@@ -1,0 +1,51 @@
+Name: edns_dial		
+Version: @VERSION@
+Release: @RELEASE@%{dist}
+Summary: YAMU edns_dial
+
+Group: Applications/Internet
+License: GPL
+URL: http://www.yamutech.com
+Source0: edns_dial-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}
+
+%description
+YAMU edns_dial
+
+
+%prep
+%setup -q -n edns_dial-%{version}
+
+
+%build
+#make %{?_smp_mflags}
+make
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/etc/
+mkdir -p %{buildroot}/etc/init.d
+
+install -m 755 edns_dial %{buildroot}/%{_bindir}/edns_dial
+install -m 755 config/*  %{buildroot}/etc/
+install -m 755 ymediald  %{buildroot}/etc/init.d/
+
+%clean
+rm -rf %{buildroot}
+
+%post
+chkconfig --add ymediald
+
+%files
+%defattr(-,root,root,-)
+%{_bindir}/edns_dial
+%dir /etc/dial_cert.pem  
+%dir /etc/dial_config
+/etc/init.d/ymediald
+
+%preun
+chkconfig --del ymediald
+
+%changelog
+

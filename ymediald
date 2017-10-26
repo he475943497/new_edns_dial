@@ -1,0 +1,76 @@
+#! /bin/bash
+#
+# edns_dial	start/stop manager
+#
+# Authors: yamu, 2016, <yamu@yamutech.com>
+#
+# chkconfig: 345 13 87
+# description: edns_dial start/stop manager
+#
+# processname: /usr/bin/edns_dial
+# pidfile: /var/run/edns_dial.pid
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+RETVAR=0
+PROG="edns_dial"
+LOCK_FILE=/var/lock/subsys/edns_dial
+pidfile=/var/run/edns_dial.pid
+EDNS_DIAL_BIN=/usr/bin/edns_dial
+kill_pid=/var/run/edns_dial.kill
+
+case "$1" in
+	start)
+		echo "Starting edns_dial: "
+			daemon --pidfile=$pidfile ${EDNS_DIAL_BIN} start 
+			RETVAR=$?
+		if [ $RETVAR -ne 0 ]
+		then
+			exit 6
+		fi
+		
+		echo "$(pgrep edns_dial|head -1)" > $pidfile
+		touch ${LOCK_FILE}
+		;;
+
+	stop)
+		echo -n $"Shutting down $PROG: "
+		if [ -f $pidfile ]
+		then
+			echo "$(pgrep edns_dial|head -2)" > $kill_pid
+			for pid in `cat $kill_pid`
+			do
+				kill -9 $pid
+			done
+			RETVAR=$?
+			rm -f $pidfile
+		else
+			echo "$(pgrep edns_dial|head -2)" > $kill_pid
+			for pid in `cat $kill_pid`
+			do
+				kill -9 $pid
+			done
+			RETVAR=$?
+		fi
+		[ $RETVAR -ne 0 ] && exit 6
+		rm -f $LOCK_FILE
+		;;
+
+	restart|reload|force-reload)
+		$0 stop
+		$0 start
+		RETVAR=$?
+		;;
+
+	status)
+		status $EDNS_DIAL_BIN
+		RETVAR=$?
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|force-reload|status}"
+		exit 2
+		;;
+esac
+
+exit $RETVAR

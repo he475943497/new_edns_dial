@@ -1,0 +1,68 @@
+TGT=edns_dial
+
+SRCS=$(wildcard ./src/*.cpp)
+#SRCS=$(wildcard *.cpp)
+
+TOP=$(shell pwd)
+
+#LIBRAYS= -levent -lrt -pthread -lssl -lcrypto -ldl -lz -lpcre ./libclib.a /usr/lib64/libthrift.a /usr/lib64/libthriftnb.a /usr/lib64/mysql/libmysqlclient.a
+#LIBRAYS= -levent -lrt -pthread -lssl -lcrypto -ldl -lz ./lib/*.a
+
+LIBRAYS= -levent -lrt -pthread -lssl -lcrypto -ldl -lz -lthrift -lthriftnb ./lib/*.a
+COMPILE_FLAGS= -g -W  -O2 -DHAVE_NETINET_IN_H -I. -I./include -I./clib/include -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include/ -I/usr/include/openssl 
+
+TGT_PLACE=$(TOP)/out
+DEP=dep
+
+CC=g++
+#DIAL_PACKET=dial_query.tar.gz
+#INSTALL_PACKET=dial_core_install.bin.tar
+
+RPM_VERSION = 1.1.1.8
+COMMIT = $(shell git rev-list HEAD |head -1|cut -c 1-6)
+#RPM_RELEASE = $(shell git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/' -e 's/-/_/g')_$(COMMIT)
+RPM_RELEASE = enterprise
+RPM_TOP_DIR = $(shell rpm -E %{_topdir})
+PRJHOME = $(shell pwd)
+
+all:$(TGT)
+	cp $(TGT) $(TGT_PLACE)
+	@echo Generation target!	
+
+$(TGT):$(SRCS:.cpp=.o)
+
+	$(CC) -o $@ $^ $(LIBRAYS) $(COMPILE_FLAGS) 
+	
+
+$(SRCS:.cpp=.o):
+	$(CC) -c $< $(COMPILE_FLAGS)
+
+
+$(DEP): $(SRCS)
+	$(CC) -I $(TOP)/include/ -MM  $(SRCS)  > $@
+	sed -i "s/: / $@: /g" $@
+
+sinclude $(DEP)
+
+
+	
+.PHONY:	clean install 
+
+
+clean:
+	rm -rf $(TGT) $(DEP) $(SRCS:.cpp=.o) $(TGT_PLACE)
+
+rpm:
+	@echo [RPM] ; \
+    	sed -e "s/@VERSION@/$(RPM_VERSION)/g" -e "s/@RELEASE@/$(RPM_RELEASE)/g" edns_dial.spec.tmp > ${RPM_TOP_DIR}/SPECS/edns_dial.spec ; \
+    	cp -a -r ${PRJHOME} /tmp/edns_dial-$(RPM_VERSION) ; \
+    	cd /tmp ; \
+    	tar zcvf $(RPM_TOP_DIR)/SOURCES/edns_dial-$(RPM_VERSION).tar.gz edns_dial-$(RPM_VERSION) ; \
+    	rm -rf edns_dial-$(RPM_VERSION) ; \
+    	rpmbuild -bb $(RPM_TOP_DIR)/SPECS/edns_dial.spec
+
+
+
+
+
+
