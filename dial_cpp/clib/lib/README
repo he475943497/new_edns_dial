@@ -1,0 +1,3 @@
+# libclib.a: without debug info
+
+# libclibd.a: contain debug info

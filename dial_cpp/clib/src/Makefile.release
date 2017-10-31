@@ -1,0 +1,36 @@
+#Project: Uba
+CXX = gcc
+
+INCS = -I"../include"
+
+COMPILE_EXE = -g -Wall -std=gnu99
+#COMPILE_EXE = -O2 -Wall -std=gnu99
+
+CFLAGS = $(INCS) $(COMPILE_EXE)
+
+LINK_EXE = -Wl,-rpath=. -Wall
+
+LIBS = $(LINK_EXE) 
+
+
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
+BIN = ../lib/libclib.a
+
+RM = rm -f
+
+
+.PHONY: all clean
+
+
+all: $(OBJS)
+	ar rcs $(BIN) $(OBJS);
+	if [ -f "../lib/libclib_x86_64.a" ]; then rm ../lib/libclib_x86_64.a; fi;
+	ln -s libclib.a ../lib/libclib_x86_64.a
+
+clean:
+	$(RM) $(OBJS) $(BIN) ../lib/libclib_x86_64.a
+
+%.o: %.c
+	$(CXX) $(CFLAGS) -c -o $@ $<
+

@@ -1,0 +1,33 @@
+#Project: Uba
+CXX = gcc
+
+INCS = -I"../include"
+
+COMPILE_EXE = -g -Wall -std=gnu99  -DCHECK_MEM_LEAK
+
+CFLAGS = $(INCS) $(COMPILE_EXE)
+
+LINK_EXE = -Wl,-rpath=. -Wall
+
+LIBS = $(LINK_EXE) 
+
+
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
+BIN = ../lib/libclibd.a
+
+RM = rm -f
+
+
+.PHONY: all clean
+
+
+all: $(OBJS)
+	ar rcs $(BIN) $(OBJS)
+	
+clean:
+	$(RM) $(OBJS) $(BIN)
+
+%.o: %.c
+	$(CXX) $(CFLAGS) -c -o $@ $<
+
